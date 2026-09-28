@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Master Material PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="wrapper">
+    <main class="main-content">
+        <header class="top-navbar">
+            <a href="dashboard.html" class="brand-link">
+                <div class="navbar-brand">
+                    <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                    <span class="navbar-brand-text">Master Material</span>
+                </div>
+            </a>
+            <div style="text-align: right; display: flex; align-items: center; gap: 20px;">
+                <div class="material-request-inbox">
+                    <button type="button" id="material-request-notification-toggle" class="material-request-notification-toggle" aria-label="Notifikasi pengajuan material" aria-expanded="false" aria-controls="material-request-notification-panel">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="material-request-notification-count" class="material-request-notification-count" hidden>0</span>
+                    </button>
+                    <section id="material-request-notification-panel" class="material-request-notification-panel" aria-label="Inbox pengajuan material" hidden>
+                        <div class="material-request-inbox-heading">
+                            <h2>Pengajuan Material</h2>
+                            <span id="material-request-inbox-summary"></span>
+                        </div>
+                        <div id="material-request-inbox-list" class="material-request-inbox-list" aria-live="polite"></div>
+                    </section>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <div id="live-clock" style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 2px; font-weight: 500;"></div>
+                <div class="navbar-title" id="greeting">Selamat Datang</div>
+                <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+                </div>
+                <a href="#" onclick="logout()" title="Logout" class="navbar-logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="dashboard-stats">
+                <!-- Shortcut: Stock OS -->
+                <div class="card" onclick="window.location.href='stock-os.html'" style="cursor: pointer;">
+                    <div class="stat-card-body">
+                        <div>
+                            <h3>Stock OS</h3>
+                            <p id="stat-stock-os-qty" style="font-size: 28px; font-weight: bold; color: var(--primary-blue); margin: 0;">0</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    </div>
+                </div>
+                <!-- Shortcut: Daftar Kode Material -->
+                <div class="card" onclick="window.location.href='material.html'" style="cursor: pointer;">
+                    <div class="stat-card-body">
+                        <div>
+                            <h3>Daftar Kode Material</h3>
+                            <p id="stat-total-material-codes" style="font-size: 28px; font-weight: bold; color: var(--primary-blue); margin: 0;">0</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-barcode"></i></div>
+                    </div>
+                </div>
+                <!-- Shortcut: Riwayat PO -->
+                <div class="card" onclick="window.location.href='po.html'" style="cursor: pointer;">
+                    <div class="stat-card-body">
+                        <div>
+                            <h3>Riwayat PO</h3>
+                            <p id="stat-total-po" style="font-size: 28px; font-weight: bold; color: var(--primary-blue); margin: 0;">0</p>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    </div>
+                </div>
+                <!-- Shortcut: Daftar Vendor & Komoditi -->
+                <div class="card" onclick="window.location.href='vendor.html'" style="cursor: pointer;">
+                    <div class="stat-card-body">
+                        <div>
+                            <h3>Buat Perbandingan Harga</h3>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    </div>
+                </div>
+                <div class="card" onclick="window.location.href='request-material.html'" style="cursor: pointer;">
+                    <div class="stat-card-body">
+                        <div>
+                            <h3>Ajukan Penambahan Material</h3>
+                        </div>
+                        <div class="stat-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Baru: Quick Cek Harga Terakhir -->
+            <div class="card fade-in" style="margin-top: 25px;">
+                <div style="margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 1.25rem;"><i class="fa-solid fa-magnifying-glass-dollar"></i> Quick Cek Harga Terakhir</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Masukkan kode material untuk melihat harga dan vendor dari pembelian terakhir.</p>
+                </div>
+                
+                <div class="dashboard-search-picker">
+                    <div class="dashboard-search-controls">
+                        <input type="text" id="dashboard-search-input" class="form-control" placeholder="Cari nama atau kode material..." aria-label="Cari nama atau kode material" aria-autocomplete="list" aria-controls="dashboard-material-suggestions" aria-expanded="false">
+                        <button type="button" id="dashboard-price-search-button" class="btn btn-primary" style="white-space: nowrap;">Cari Harga</button>
+                    </div>
+                    <div id="dashboard-material-suggestions" class="dashboard-material-suggestions" role="listbox" hidden></div>
+                </div>
+
+                <!-- Hasil Pencarian -->
+                <div id="dashboard-price-result" style="display: none; margin-top: 20px; padding: 25px; border-radius: 12px; background: #f0f7ff; border-left: 5px solid var(--primary-blue);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3 id="res-nama" style="margin: 0; font-size: 1.1rem; color: var(--text-main);">Nama Material</h3>
+                            <p id="res-kode" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Kode: -</p>
+                            <p id="res-group" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Group: -</p>
+                            <p id="res-type" style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Type: -</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <label class="label-sm" style="margin-top: 0;">Tanggal Terakhir</label>
+                            <span id="res-tanggal" style="font-weight: 600; font-size: 0.9rem;">-</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <label class="label-sm">Harga Satuan Terakhir</label>
+                        <div id="res-harga" style="font-size: 2rem; font-weight: 800; color: var(--primary-blue);">Rp 0</div>
+                    </div>
+                    <div id="res-vendor-container" style="margin-top: 10px; font-size: 0.85rem; color: var(--text-main); font-weight: 600;">
+                        <i class="fa-solid fa-building" style="color: var(--primary-blue); margin-right: 5px;"></i> <span id="res-vendor">-</span>
+                    </div>
+                </div>
+
+                <!-- Not Found -->
+                <div id="dashboard-price-notfound" style="display: none; margin-top: 20px; text-align: center; padding: 20px; color: var(--text-muted); background: #f8f9fa; border-radius: 8px;">
+                    <i class="fa-solid fa-circle-info"></i> Kode material tidak ditemukan dalam riwayat PO.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Dashboard Baru (Sekarang di posisi paling bawah) -->
+        <footer style="margin-top: auto; padding: 20px 30px; border-top: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/logo.png" alt="Logo KTI" style="width: 35px; opacity: 0.8;">
+                <span style="font-size: 0.8rem; color: #718096; font-weight: 500;">&copy; <span id="footer-year"></span> PT. Krakatau Tirta Industri</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #a0aec0;">Inventory Control System v1.0</div>
+        </footer>
+    </main>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/data-stock-os.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/data-po.js"></script>
+<script src="js/data-vendor.js"></script>
+<script src="js/data-material.js"></script>
+<script src="js/script.js"></script>
+<script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

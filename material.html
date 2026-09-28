@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Kode Material - PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load Vue and SheetJS for Excel processing -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <a href="dashboard.html" class="brand-link">
+                <div class="navbar-brand">
+                    <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                    <span class="navbar-brand-text">Master Material</span>
+                </div>
+            </a>
+            <div style="text-align: right; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div id="live-clock" style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 2px; font-weight: 500;"></div>
+                    <div class="navbar-title" id="greeting">Selamat Datang</div>
+                    <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+                </div>
+                <a href="#" onclick="logout()" title="Logout" class="navbar-logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1 style="margin:0; display: flex; align-items: center; gap: 15px;">
+                        Daftar Kode Material
+                        <span v-if="isLoading" style="font-size: 0.85rem; color: var(--primary-blue); font-weight: 500; background: #eef2ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #c7d2fe;">
+                            <i class="fa-solid fa-rotate fa-spin"></i> Sinkronisasi...
+                        </span>
+                    </h1>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <input type="text" v-model="searchQuery" class="form-control" placeholder="Cari Kode, Deskripsi, Group, atau Type...">
+                </div>
+
+                <div class="table-container">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th style="width: 150px;">Kode Material</th>
+                                <th>Deskripsi Material</th>
+                                <th>Material Group</th>
+                                <th>Material Type</th>
+                                <th>Valuation Class</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in filteredData" :key="item.id">
+                                <td style="font-weight: bold; color: var(--primary-blue); display: flex; align-items: center; gap: 8px;">
+                                    {{ item.kode }}
+                                    <button @click="copyToClipboard(item.kode)" class="btn btn-sm" style="background: #eef2ff; color: var(--primary-blue); padding: 4px 8px; border-radius: 6px;" title="Salin Kode Material">
+                                        <i class="fa-solid fa-copy" style="font-size: 0.8em;"></i>
+                                    </button>
+                                </td>
+                                <td>{{ item.shortText }}</td>
+                                <td><span class="badge" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">{{ item.materialGroup }}</span></td>
+                                <td>{{ item.materialType }}</td>
+                                <td style="font-size: 0.8rem; color: var(--text-muted);">{{ item.valuationClass }}</td>
+                            </tr>
+                            <tr v-if="isLoading && filteredData.length === 0">
+                                <td colspan="5" style="text-align: center; padding: 60px;">
+                                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--primary-blue); margin-bottom: 15px;"></i>
+                                    <div style="color: var(--text-muted); font-weight: 500;">Mengambil data material terbaru...</div>
+                                </td>
+                            </tr>
+                            <tr v-else-if="filteredData.length === 0">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    Data material tidak ditemukan.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer style="margin-top: auto; padding: 20px 30px; border-top: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/logo.png" alt="Logo KTI" style="width: 35px; opacity: 0.8;">
+                <span style="font-size: 0.8rem; color: #718096; font-weight: 500;">&copy; <span id="footer-year"></span> PT. Krakatau Tirta Industri</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #a0aec0;">Inventory Control System v1.0</div>
+        </footer>
+    </main>
+</div>
+
+<script src="js/data-material.js"></script>
+<script src="js/script.js"></script>
+<script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/material-app.js"></script>
+</body>
+</html>

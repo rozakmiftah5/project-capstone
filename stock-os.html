@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock OS - Master Material PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="dashboard.html" class="brand-link">
+                    <div class="navbar-brand">
+                        <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                        <span class="navbar-brand-text">Master Material</span>
+                    </div>
+                </a>
+            </div>
+            <div style="text-align: right; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div id="live-clock" style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 2px; font-weight: 500;"></div>
+                    <div class="navbar-title">Stock OS</div>
+                    <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+                </div>
+                <a href="#" onclick="logout()" title="Logout" class="navbar-logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Manajemen Stock OS</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" @click="openModalPenerimaan()"><i class="fa-solid fa-truck-ramp-box"></i> Penerimaan Pengiriman</button>
+                        <button class="btn btn-warning" @click="openModalPemakaian()"><i class="fa-solid fa-calculator"></i> Catat Pemakaian</button>
+                        <button class="btn btn-primary" @click="openModalTambah()">+ Tambah Stock OS</button>
+                    </div>
+                </div>
+
+                <!-- Filter & Sort Section -->
+                <div class="filter-section card" style="background: #f8f9fa; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <label class="label-sm">Gudang</label>
+                            <select v-model="filters.gudang" class="form-control">
+                                <option value="">Semua Gudang</option>
+                                <option v-for="g in gudangList" :value="g">{{ g }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="label-sm">Urutkan Berdasarkan</label>
+                            <select v-model="sortBy" class="form-control">
+                                <option value="namaMaterial">Nama Material (A-Z)</option>
+                                <option value="stockKg">Stok (Terkecil)</option>
+                                <option value="sisaPOKg">Sisa PO (Terbesar)</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding-top: 25px;">
+                            <input type="checkbox" v-model="filters.criticalOnly" id="critical">
+                            <label for="critical" style="font-size: 0.8rem; color: #dc3545; font-weight: bold;">Stok Kritis/Kosong</label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; text-align: right;">
+                        <button class="btn btn-sm" @click="resetFilters()">Reset Filter</button>
+                    </div>
+                </div>
+
+                <div class="search-box" style="margin-bottom: 20px;">
+                    <input type="text" v-model="filters.search" class="form-control" placeholder="Cari Nama Material atau Gudang...">
+                </div>
+
+                <div class="table-container">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Nama Material</th>
+                                <th>Gudang</th>
+                                <th>Stok (Kg)</th>
+                                <th>Sisa PO (Kg)</th>
+                                <th>Safety Stock (Kg)</th>
+                                <th>Status</th>
+                                <th>Catatan</th>
+                                <th>Terakhir Update</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in paginatedData" :key="item.id" @click="showHistory(item)" class="row-clickable" title="Klik untuk lihat riwayat pemakaian">
+                                <td style="font-weight: 600; color: var(--primary-blue);">{{ item.namaMaterial }}</td>
+                                <td><span style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-warehouse"></i></span> {{ item.gudang }}</td>
+                                <td style="font-family: 'Courier New', Courier, monospace; font-weight: 600;">{{ formatNumber(item.stockKg) }}</td>
+                                <td style="font-family: 'Courier New', Courier, monospace; color: var(--primary-blue);">{{ formatNumber(item.sisaPOKg) }}</td>
+                                <td style="font-family: 'Courier New', Courier, monospace; color: var(--text-muted);">{{ formatNumber(item.safetyStockKg) }}</td>
+                                <td>
+                                    <span :class="['badge', getStatusClass(item)]">
+                                        <i :class="getStatusIcon(item)"></i> {{ getStatusText(item) }}
+                                    </span>
+                                </td>
+                                <td style="max-width: 200px;"><div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;" v-html="item.catatan || '-'"></div></td>
+                                <td style="font-size: 0.8rem; color: #94a3b8;">{{ item.lastUpdate }}</td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-sm" title="Catat Penerimaan" @click.stop="openModalPenerimaan(item)" style="background: #dcfce7; color: #16a34a; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px;">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </button>
+                                        <button class="btn btn-warning btn-sm" title="Catat Pemakaian" @click.stop="openModalPemakaian(item)" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px;">
+                                            <i class="fa-solid fa-minus"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm" title="Edit Data" @click.stop="openModalEdit(item)" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px;">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" title="Hapus Data" @click.stop="hapusData(item)" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 6px;">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredAndSortedData.length === 0">
+                                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    Tidak ada data Stock OS yang ditemukan.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div v-if="totalPages > 1" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <button class="btn btn-sm" :disabled="currentPage === 1" @click="currentPage--">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span style="font-size: 0.9rem; font-weight: 600;">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+                    <button class="btn btn-sm" :disabled="currentPage === totalPages" @click="currentPage++">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Riwayat Pemakaian -->
+        <div id="historyModal" class="modal" :style="{ display: historyModalVisible ? 'flex' : 'none' }">
+            <div class="modal-content" style="width: 650px; max-width: 95%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>Riwayat Pemakaian</h2>
+                    <button class="btn btn-sm" @click="historyModalVisible = false"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <h4 style="color: var(--primary-blue); margin-bottom: 20px;">{{ selectedMaterialName }}</h4>
+                
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th style="text-align: right;">Penerimaan (Kg)</th>
+                                <th style="text-align: right;">Pemakaian (Kg)</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="log in selectedMaterialHistory" :key="log.id">
+                                <td style="font-size: 0.85rem; white-space: nowrap; font-weight: 500;">{{ log.tanggal }}</td>
+                                <td style="text-align: right; font-weight: 700; color: #16a34a; font-family: 'Courier New', Courier, monospace;">
+                                    {{ log.type === 'IN' ? '+' + formatNumber(log.qty) : '-' }}
+                                </td>
+                                <td style="text-align: right; font-weight: 700; color: #dc3545; font-family: 'Courier New', Courier, monospace;">
+                                    {{ log.type === 'OUT' ? '-' + formatNumber(log.qty) : '-' }}
+                                </td>
+                                <td style="font-size: 0.85rem; color: var(--text-muted);">
+                                    <span style="font-weight: 600; color: var(--text-main); font-size: 0.75rem; text-transform: uppercase;">{{ log.transactionType }}</span><br>
+                                    <span v-if="log.suplierName" style="font-size: 0.75rem; color: var(--primary-blue); font-weight: 600;">Supplier: {{ log.suplierName }}</span><br v-if="log.suplierName">
+                                    {{ log.keterangan || '-' }}
+                                </td>
+                            </tr>
+                            <tr v-if="selectedMaterialHistory.length === 0">
+                                <td colspan="4" style="text-align: center; padding: 30px; color: var(--text-muted);">Belum ada catatan riwayat untuk material ini.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn btn-primary" @click="historyModalVisible = false">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Catat Pemakaian -->
+        <div id="usageModal" class="modal" :style="{ display: usageModalVisible ? 'flex' : 'none' }">
+            <div class="modal-content">
+                <h2>Catat Pemakaian Harian</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Stok akan berkurang otomatis setelah disimpan.</p>
+                <form @submit.prevent="simpanPemakaian">
+                    <label class="label-sm">Pilih Material</label>
+                    <select v-model="formDataUsage.materialId" class="form-control" required :disabled="usageFixed">
+                        <option value="">-- Pilih Material --</option>
+                        <option v-for="m in allMaterials" :value="m.id">{{ m.namaMaterial }} (Sisa: {{ m.stockKg }} Kg)</option>
+                    </select>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="label-sm">Jumlah Pemakaian (Kg)</label>
+                            <input type="number" v-model="formDataUsage.qty" class="form-control" min="0.1" step="0.1" required>
+                        </div>
+                        <div>
+                            <label class="label-sm">Tanggal</label>
+                            <input type="date" v-model="formDataUsage.tanggal" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <label class="label-sm">Keterangan / Tujuan Pemakaian</label>
+                    <textarea v-model="formDataUsage.keterangan" class="form-control" rows="2" placeholder="Contoh: Produksi harian, Pembersihan, dll."></textarea>
+                    
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button type="button" class="btn" @click="usageModalVisible = false">Batal</button>
+                        <button type="submit" class="btn btn-warning">Kurangi Stok</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Tambah/Edit Stock OS -->
+        <!-- Modal Penerimaan Pengiriman -->
+        <div id="receiptModal" class="modal" :style="{ display: receiptModalVisible ? 'flex' : 'none' }">
+            <div class="modal-content">
+                <h2>Penerimaan Pengiriman Masuk</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Catat penerimaan barang untuk memperbarui stok dan mengurangi Sisa PO.</p>
+                <form @submit.prevent="simpanPenerimaan">
+                    <label class="label-sm">Pilih Material (Sisa PO)</label>
+                    <select v-model="formDataReceipt.materialId" class="form-control" required>
+                        <option value="">-- Pilih Material --</option>
+                        <option v-for="m in allMaterials" :value="m.id">{{ m.namaMaterial }} (Sisa PO: {{ m.sisaPOKg }} Kg)</option>
+                    </select>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="label-sm">Jumlah Diterima (Kg)</label>
+                            <input type="number" v-model="formDataReceipt.qty" class="form-control" min="0.1" step="0.1" required>
+                        </div>
+                        <div>
+                            <label class="label-sm">Tanggal Penerimaan</label>
+                            <input type="date" v-model="formDataReceipt.tanggal" class="form-control" required>
+                        </div>
+                    </div>
+                    <label class="label-sm">Nama Supplier</label>
+                    <input type="text" v-model="formDataReceipt.suplierName" class="form-control" placeholder="Masukkan nama supplier/vendor" required>
+                    
+                    <label class="label-sm">Keterangan Penerimaan</label>
+                    <textarea v-model="formDataReceipt.keterangan" class="form-control" rows="2" placeholder="Contoh: No. Surat Jalan, Vendor, dll."></textarea>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button type="button" class="btn" @click="receiptModalVisible = false">Batal</button>
+                        <button type="submit" class="btn btn-primary" style="background-color: #16a34a;">Konfirmasi Penerimaan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="stockOSModal" class="modal" :style="{ display: modalVisible ? 'flex' : 'none' }">
+            <div class="modal-content">
+                <h2>{{ currentEditId !== null ? 'Edit' : 'Tambah' }} Stock OS</h2>
+                <form @submit.prevent="simpanData">
+                    <label for="namaMaterial" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: block; margin-top: 10px;">Nama Material</label>
+                    <input type="text" v-model="formData.namaMaterial" class="form-control" required>
+        
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="label-sm">Gudang</label>
+                            <input type="text" v-model="formData.gudang" class="form-control" required>
+                        </div>
+                        <div>
+                            <label class="label-sm">Stok (Kg)</label>
+                            <input type="number" v-model="formData.stockKg" class="form-control" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="label-sm">Sisa PO (Kg)</label>
+                            <input type="number" v-model="formData.sisaPOKg" class="form-control" min="0" required>
+                        </div>
+                        <div>
+                            <label class="label-sm">Safety Stock (Kg)</label>
+                            <input type="number" v-model="formData.safetyStockKg" class="form-control" min="0" required>
+                        </div>
+                    </div>
+        
+                    <label class="label-sm">Catatan</label>
+                    <textarea v-model="formData.catatan" class="form-control" rows="2"></textarea>
+                    
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button type="button" class="btn" @click="modalVisible = false">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/data-stock-os.js"></script>
+<script src="js/script.js"></script>
+<script src="js/stock-os-app.js"></script>
+
+</body>
+</html>

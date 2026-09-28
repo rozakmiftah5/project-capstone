@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cek Harga - Master Material PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .search-container {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        .price-result-card {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 30px;
+            border-left: 5px solid var(--primary-blue);
+        }
+        .price-big {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <a href="dashboard.html" class="brand-link">
+                <div class="navbar-brand">
+                    <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                    <span class="navbar-brand-text">Master Material</span>
+                </div>
+            </a>
+            <div class="navbar-title">Cek Harga Material</div>
+        </header>
+
+        <div class="content-body">
+            <div class="search-container">
+                <h1 style="margin-bottom: 20px; color: #334155;">Cek Harga Terakhir</h1>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" 
+                           v-model="searchInput" 
+                           @keyup.enter="checkPrice"
+                           class="form-control" 
+                           placeholder="Masukkan Kode Material (Contoh: 1000001)"
+                           style="font-size: 1.1rem; padding: 15px;">
+                    <button class="btn btn-primary" @click="checkPrice" style="padding: 0 30px;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Cari
+                    </button>
+                </div>
+                <p style="margin-top: 10px; color: var(--text-muted); font-size: 0.85rem;">
+                    Sistem akan mencari riwayat pembelian terakhir berdasarkan database PO.
+                </p>
+            </div>
+
+            <!-- Hasil Pencarian -->
+            <div v-if="result && result.found" class="card price-result-card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <span class="badge badge-success" style="margin-bottom: 10px;">Data Ditemukan</span>
+                        <h2 style="margin: 0;">{{ result.nama }}</h2>
+                        <p style="color: var(--text-muted);">Kode: {{ result.kode }} | Group: {{ result.materialGroup }} | Type: {{ result.materialType }}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <label class="label-sm">Tanggal Pembelian Terakhir</label>
+                        <span style="font-weight: 600;">{{ result.tanggal }}</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <label class="label-sm">Harga Satuan Terakhir</label>
+                    <div class="price-big">{{ formatCurrency(result.harga) }}</div>
+                </div>
+
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <label class="label-sm">Vendor / Supplier</label>
+                    <div style="font-weight: 600; color: #334155;">
+                        <i class="fa-solid fa-building" style="color: var(--primary-blue); margin-right: 8px;"></i>
+                        {{ result.vendor }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jika Tidak Ditemukan -->
+            <div v-else-if="hasSearched" class="card" style="max-width: 600px; margin: 20px auto; text-align: center; padding: 40px;">
+                <i class="fa-solid fa-circle-question" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 15px;"></i>
+                <h3>Kode Material Tidak Ditemukan</h3>
+                <p style="color: var(--text-muted);">Pastikan kode yang dimasukkan benar atau material tersebut sudah pernah memiliki riwayat PO.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/data-po.js"></script>
+<script src="js/data-material.js"></script>
+<script src="js/script.js"></script>
+<script src="js/stok-app.js"></script>
+</body>
+</html>

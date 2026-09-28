@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perbandingan Harga - Master Material PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="dashboard.html" class="brand-link">
+                    <div class="navbar-brand">
+                        <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                        <span class="navbar-brand-text">Master Material</span>
+                    </div>
+                </a>
+            </div>
+            <div style="text-align: right; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div id="live-clock" style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 2px; font-weight: 500;"></div>
+                    <div class="navbar-title">Perbandingan Harga</div>
+                    <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+                </div>
+                <a href="#" onclick="logout()" title="Logout" class="navbar-logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">Perbandingan Harga Material</h2>
+                </div>
+
+                <!-- Material Search and Selection -->
+                <div class="search-box" style="margin-bottom: 20px; position: relative;">
+                    <label class="label-sm">Cari & Pilih Material</label>
+                    <input type="text" v-model="searchQuery" class="form-control" placeholder="Cari Kode atau Deskripsi Material..." @focus="showSuggestions = true" @blur="hideSuggestions" style="margin-bottom: 5px;">
+                    <div v-if="searchQuery.length >= 2 && materialSuggestions.length > 0 && showSuggestions" class="autocomplete-results">
+                        <div v-for="item in materialSuggestions" :key="item.kode" @mousedown.prevent="selectMaterial(item)" class="autocomplete-item">
+                            {{ item.kode }} - {{ item.shortText }}
+                        </div>
+                    </div>
+                    <div v-else-if="searchQuery.length >= 2 && materialSuggestions.length === 0 && !selectedMaterial" style="margin-top: 10px; padding: 10px; background: #fef3c7; border-radius: 8px; color: #d97706; font-size: 0.85rem;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Material tidak ditemukan.
+                    </div>
+                    <div v-if="selectedMaterial" class="selected-material-info" style="margin-top: 10px; padding: 10px; background: #eef2ff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: var(--primary-blue);">Material Terpilih:</strong> {{ selectedMaterial.kode }} - {{ selectedMaterial.shortText }} ({{ selectedMaterial.uom }})
+                        </div>
+                        <button @click="clearSelection" class="btn btn-sm" style="background: #e2e8f0; color: #475569;">
+                            <i class="fa-solid fa-xmark"></i> Ganti
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Penawaran Harga Baru -->
+                <div v-if="selectedMaterial" class="card fade-in" style="margin-top: 25px; border-left: 5px solid var(--primary-blue);">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--primary-blue);"><i class="fa-solid fa-plus-circle"></i> Input Penawaran Harga Baru</h3>
+                    <form @submit.prevent="addManualOffer">
+                        <div class="vendor-offer-common-fields">
+                            <div>
+                                <label class="label-sm">Nama Pengadaan</label>
+                                <input type="text" v-model="newOfferForm.namaPengadaan" class="form-control" required placeholder="Contoh: Pengadaan Material X Tahap 1">
+                            </div>
+                            <div>
+                                <label class="label-sm">Nomor PR</label>
+                                <input type="text" v-model="newOfferForm.nomorPR" class="form-control" required placeholder="Contoh: PR/KTI/2026/001">
+                            </div>
+                        </div>
+                        <label class="label-sm">Spesifikasi Material</label>
+                        <input type="text" v-model="newOfferForm.spesifikasiMaterial" class="form-control" required placeholder="Spesifikasi material dari penawaran">
+                        
+                        <div class="vendor-quotes-heading">
+                            <div>
+                                <h4>Penawaran Vendor</h4>
+                                <p>Masukkan quantity dan harga untuk setiap vendor.</p>
+                            </div>
+                            <button type="button" @click="addVendorRow" class="btn btn-primary">
+                                <i class="fa-solid fa-plus"></i> Tambah Vendor
+                            </button>
+                        </div>
+                        <div v-for="(offer, index) in newOfferForm.vendorOffers" :key="offer.id" class="vendor-quote-row">
+                            <label class="vendor-quote-field">
+                                <span>Vendor {{ index + 1 }}</span>
+                                <input type="text" v-model.trim="offer.vendor" class="form-control" required placeholder="Nama Vendor">
+                            </label>
+                            <label class="vendor-quote-field">
+                                <span>Quantity</span>
+                                <input type="number" v-model.number="offer.qty" class="form-control" min="0.1" step="0.1" required>
+                            </label>
+                            <label class="vendor-quote-field">
+                                <span>Harga Satuan (Rp)</span>
+                                <input type="number" v-model.number="offer.harga" class="form-control" min="0.1" step="0.1" required>
+                            </label>
+                            <button type="button" @click="removeVendorRow(index)" :disabled="newOfferForm.vendorOffers.length === 1" class="vendor-quote-remove" :aria-label="`Hapus vendor ${index + 1}`" title="Hapus vendor">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                        <div style="margin-top: 20px; text-align: right;">
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Simpan Perbandingan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Comparison Results Table -->
+                <div v-if="selectedMaterial" class="card fade-in" style="margin-top: 25px;">
+                    <h3 style="margin-top: 0; margin-bottom: 15px;"><i class="fa-solid fa-chart-bar"></i> Riwayat & Penawaran Harga</h3>
+                    <div v-if="comparisonResults.length > 0" class="table-container">
+                        <table class="table-modern">
+                            <thead>
+                                <tr>
+                                    <th>Tipe</th>
+                                    <th>No. Dokumen</th>
+                                    <th>Tanggal</th>
+                                    <th>Vendor</th>
+                                    <th>Qty</th>
+                                    <th>Harga Satuan</th>
+                                    <th>Total Harga</th>
+                                    <th>Potensi Hemat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, index) in comparisonResults" :key="item.id" :class="{'best-price-row': index === 0}">
+                                    <td>
+                                        <span :class="['badge', item.type === 'manual_offer' ? 'badge-warning' : 'badge-primary']">
+                                            {{ item.type === 'manual_offer' ? 'Penawaran Baru' : 'Riwayat PO' }}
+                                        </span>
+                                    </td>
+                                    <td style="font-weight: bold; color: var(--primary-blue);">
+                                        {{ item.type === 'manual_offer' ? item.nomorPR : item.nomorPO }}
+                                    </td>
+                                    <td>{{ item.tanggal }}</td>
+                                    <td><i class="fa-solid fa-building"></i> {{ item.vendor }}</td>
+                                    <td style="text-align: center;">{{ item.qty }} {{ item.uom }}</td>
+                                    <td style="text-align: right; font-weight: 600;">{{ formatCurrency(item.harga) }}</td>
+                                    <td style="text-align: right; font-weight: 700; color: var(--primary-blue);">{{ formatCurrency(item.total) }}</td>
+                                    <td style="text-align: right;">
+                                        <span v-if="index > 0 && item.harga > bestPrice.harga" :style="{color: '#dc2626', fontWeight: 'bold'}">
+                                            +{{ calculateSavings(item.harga) }}%
+                                        </span>
+                                        <span v-else-if="index === 0" style="color: #16a34a; font-weight: bold;">
+                                            <i class="fa-solid fa-star"></i> Terbaik
+                                        </span>
+                                        <span v-else>-</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div v-else style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        Belum ada riwayat PO atau penawaran harga untuk material ini.
+                    </div>
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button @click="clearManualOffers" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i> Hapus Penawaran Material Ini</button>
+                    </div>
+                </div>
+                <div v-else class="card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; margin-bottom: 15px;"></i>
+                    <p>Pilih material terlebih dahulu untuk melihat riwayat harga dan menambahkan penawaran baru.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/data-material.js"></script>
+<script src="js/data-vendor.js"></script>
+<script src="js/script.js"></script>
+<script src="js/vendor-app.js"></script>
+</body>
+</html>

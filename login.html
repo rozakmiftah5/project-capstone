@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Master Material Management System PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="fade-in">
+    <div class="login-wrapper">
+        <div class="login-box">
+            <div class="login-right">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="assets/logo.png" alt="Logo PT. Krakatau Tirta Industri" style="width: 150px; margin-bottom: 20px;">
+                    <h1 style="font-size: 1.9rem; color: #1a202c; margin: 0; font-weight: 800; letter-spacing: -1.5px;">Master Material</h1>
+                    <p style="color: #0d6efd; font-size: 0.85rem; margin-top: 5px; font-weight: 700; letter-spacing: 1px;">PT. KRAKATAU TIRTA INDUSTRI</p>
+                </div>
+
+                <form onsubmit="event.preventDefault(); login();">
+                    <div class="input-group">
+                        <label for="email">Username / Email</label>
+                        <input type="text" id="email" class="form-control" placeholder="Masukkan username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-login">
+                        <i class="fa-solid fa-right-to-bracket"></i> MASUK KE SISTEM
+                    </button>
+                </form>
+
+                <div class="register-link" style="text-align: center; margin-top: 25px;">
+                    <span style="font-size: 0.75rem; color: #a0aec0; font-weight: 500;">&copy; <span id="current-year"></span> PT. Krakatau Tirta Industri</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

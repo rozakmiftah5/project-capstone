@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat PO - Master Material PT. Krakatau Tirta Industri</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="dashboard.html" class="brand-link">
+                    <div class="navbar-brand">
+                        <img src="assets/logo.png" alt="Logo" class="navbar-logo-img">
+                        <span class="navbar-brand-text">Master Material</span>
+                    </div>
+                </a>
+            </div>
+            <div style="text-align: right; display: flex; align-items: center; gap: 20px;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <div id="live-clock" style="font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 2px; font-weight: 500;"></div>
+                    <div class="navbar-title">Riwayat Purchase Order</div>
+                    <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+                </div>
+                <a href="#" onclick="logout()" title="Logout" class="navbar-logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1 style="margin:0; display: flex; align-items: center; gap: 15px; font-size: 1.5rem;">
+                        Riwayat Purchase Order (PO)
+                        <span v-if="isLoading" style="font-size: 0.85rem; color: var(--primary-blue); font-weight: 500; background: #eef2ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #c7d2fe;">
+                            <i class="fa-solid fa-rotate fa-spin"></i> Sinkronisasi...
+                        </span>
+                    </h1>
+                    <button @click="manualSync" class="btn btn-primary" :disabled="isLoading" style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-import"></i> 
+                        <span>Sinkronisasi Manual Excel</span>
+                    </button>
+                </div>
+
+                <div class="search-box" style="margin-bottom: 20px;">
+                    <input type="text" v-model="filters.search" class="form-control" placeholder="Cari Nomor PO, Kode Material, atau Vendor...">
+                </div>
+
+                <div class="table-container">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>Nomor PO</th>
+                                <th>Tanggal</th>
+                                <th>Kode Material</th>
+                                <th>Deskripsi Material</th>
+                                <th>Vendor / Supplier</th>
+                                <th style="text-align: center;">Qty</th>
+                                <th style="text-align: center;">Unit</th>
+                                <th style="text-align: right;">Harga Satuan (Rp)</th>
+                                <th style="text-align: right;">Total Harga (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in filteredData" :key="item.id">
+                                <td style="font-weight: bold; color: var(--primary-blue);">{{ item.nomorPO }}</td>
+                                <td>{{ item.tanggal }}</td>
+                                <td style="font-family: monospace;">{{ item.kodeMaterial }}</td>
+                                <td>{{ item.shortText }}</td>
+                                <td><i class="fa-solid fa-building"></i> {{ item.vendor }}</td>
+                                <td style="text-align: center; font-weight: bold;">{{ item.qty }}</td>
+                                <td style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">{{ item.uom }}</td>
+                                <td style="text-align: right; font-weight: 600;">{{ formatCurrency(item.harga) }}</td>
+                                <td style="text-align: right; font-weight: 700; color: var(--primary-blue);">{{ formatCurrency(item.total) }}</td>
+                            </tr>
+                            <tr v-if="isLoading && filteredData.length === 0">
+                                <td colspan="9" style="text-align: center; padding: 60px;">
+                                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--primary-blue); margin-bottom: 15px;"></i>
+                                    <div style="color: var(--text-muted); font-weight: 500;">Mengambil data PO terbaru dari Excel...</div>
+                                </td>
+                            </tr>
+                            <tr v-else-if="filteredData.length === 0">
+                                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">Data tidak ditemukan atau file Excel kosong.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="js/data-po.js"></script>
+<script src="js/script.js"></script>
+<script src="js/po-app.js"></script>
+</body>
+</html>

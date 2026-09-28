@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Pengiriman</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo-ut.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+<div class="wrapper" id="app">
+    <main class="main-content">
+        <header class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="navbar-brand">
+                    <img src="assets/logo-ut.png" alt="Logo" style="width: 35px;">
+                    <span style="font-weight: bold; font-size: 1.2rem;">SITTA UT</span>
+                </div>
+                <div class="nav-menu" style="margin-left: 20px;">
+                    <a href="dashboard.html"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+                    <a href="stok.html"><i class="fa-solid fa-box-archive"></i> Stok</a>
+                    <a href="tracking.html" class="active"><i class="fa-solid fa-truck-ramp-box"></i> Tracking</a>
+                    <a href="#" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="navbar-title">Tracking Pengiriman</div>
+                <span id="user-info" style="font-size: 0.8rem; color: rgba(255,255,255,0.7);">Admin</span>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h1>Tracking Pengiriman</h1>
+                    <button class="btn btn-primary" @click="openModalTambah()">+ Tambah DO Baru</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        class="form-control" 
+                        placeholder="Masukkan Nomor DO (Contoh: DO2025-0001)"
+                        @keyup.enter="cariTracking"
+                    >
+                    <button class="btn btn-primary" @click="cariTracking" :disabled="loading">
+                        <span v-if="loading"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                        <span v-else>Cari</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hasil Tracking (Muncul hanya jika data ditemukan) -->
+            <div v-if="foundData" class="card fade-in">
+                <div class="tracking-header">
+                    <div>
+                        <h2 style="margin:0;">{{ foundData.nomorDO }}</h2>
+                        <p style="margin:0; color:var(--text-muted); font-size:0.85rem;">Penerima: {{ foundData.nama }} (NIM: {{ foundData.nim }})</p>
+                    </div>
+                    <span :class="['badge', foundData.status === 'Selesai Antar' ? 'badge-success' : 'badge-warning']">
+                        {{ foundData.status }}
+                    </span>
+                </div>
+                <div class="tracking-info-grid">
+                    <div class="info-item"><label>Ekspedisi</label><span><i class="fa-solid fa-truck"></i> {{ foundData.ekspedisi }}</span></div>
+                    <div class="info-item"><label>Tanggal Kirim</label><span><i class="fa-solid fa-calendar-day"></i> {{ foundData.tanggalKirim }}</span></div>
+                    <div class="info-item"><label>Paket</label><span><i class="fa-solid fa-box"></i> {{ foundData.paket }}</span></div>
+                    <div class="info-item"><label>Total</label><span><i class="fa-solid fa-receipt"></i> {{ foundData.total }}</span></div>
+                </div>
+                <h4 style="margin-bottom:20px;"><i class="fa-solid fa-route"></i> Riwayat Perjalanan</h4>
+                <ul class="timeline">
+                    <li v-for="(step, index) in reversedJourney" :key="index" :class="['timeline-item', index === 0 ? 'active' : '']">
+                        <div class="timeline-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="timeline-content">
+                            <span class="timeline-time">{{ step.waktu }}</span>
+                            <p class="timeline-desc">{{ step.keterangan }}</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Daftar Seluruh Delivery Order -->
+            <div class="card fade-in">
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin:0;"><i class="fa-solid fa-list-ul"></i> Daftar Pengiriman</h3>
+                    <p style="margin:0; color:var(--text-muted); font-size:0.85rem;">Menampilkan {{ filteredTrackingList.length }} data pengiriman</p>
+                </div>
+                <div class="table-container">
+                    <table class="table-modern">
+                        <thead>
+                            <tr>
+                                <th>No. DO</th>
+                                <th>Nama Penerima (NIM)</th>
+                                <th>Ekspedisi</th>
+                                <th>Tanggal Kirim</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in filteredTrackingList" :key="item.nomorDO">
+                                <td style="font-weight: bold; color: var(--primary-blue);">{{ item.nomorDO }}</td>
+                                <td>{{ item.nama }} <br> <small class="text-muted">{{ item.nim }}</small></td>
+                                <td><i class="fa-solid fa-truck-fast"></i> {{ item.ekspedisi }}</td>
+                                <td>{{ item.tanggalKirim }}</td>
+                                <td>
+                                    <span :class="['badge', item.status === 'Selesai Antar' ? 'badge-success' : (item.status === 'Dibatalkan' ? 'badge-danger' : 'badge-warning')]">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                                <td style="display: flex; gap: 5px;">
+                                    <button class="btn btn-primary btn-sm" title="Lihat Detail" @click="lihatDetail(item)"><i class="fa-solid fa-eye"></i></button>
+                                    <button v-if="item.status !== 'Dibatalkan' && item.status !== 'Selesai Antar'" class="btn btn-danger btn-sm" title="Batalkan" @click="batalkanDO(item)"><i class="fa-solid fa-ban"></i></button>
+                                    <button v-if="item.status === 'Dibatalkan'" class="btn btn-danger btn-sm" title="Hapus Permanen" @click="hapusDO(item.nomorDO)"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr v-if="filteredTrackingList.length === 0">
+                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    Data tidak ditemukan
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Tambah DO Baru -->
+        <div class="modal" :style="{ display: modalVisible ? 'flex' : 'none' }">
+            <div class="modal-content">
+                <h2>Tambah Delivery Order Baru</h2>
+                <form @submit.prevent="simpanDO">
+                    <label class="label-sm">Nomor DO (Otomatis)</label>
+                    <input type="text" v-model="formDO.nomorDO" class="form-control" readonly style="background: #eee;">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label class="label-sm">NIM</label>
+                            <input type="text" v-model="formDO.nim" class="form-control" placeholder="Masukkan NIM" required>
+                        </div>
+                        <div>
+                            <label class="label-sm">Nama Penerima</label>
+                            <input type="text" v-model="formDO.nama" class="form-control" placeholder="Masukkan Nama" required>
+                        </div>
+                    </div>
+
+                    <label class="label-sm">Tujuan UT-Daerah</label>
+                    <select v-model="formDO.tujuan" class="form-control" required>
+                        <option value="">Pilih Daerah Tujuan</option>
+                        <option v-for="u in upbjjList" :key="u" :value="u">{{ u }}</option>
+                    </select>
+
+                    <label class="label-sm">Ekspedisi</label>
+                    <select v-model="formDO.ekspedisi" class="form-control" required>
+                        <option value="">Pilih Ekspedisi</option>
+                        <option v-for="exp in pengirimanList" :key="exp.kode" :value="exp.nama">{{ exp.nama }}</option>
+                    </select>
+
+                    <label class="label-sm">Paket Bahan Ajar</label>
+                    <select v-model="formDO.paketKode" class="form-control" @change="updatePaketDetail" required>
+                        <option value="">Pilih Paket</option>
+                        <option v-for="p in allAvailablePakets" :key="p.kode" :value="p.kode">{{ p.kode }} - {{ p.nama }}</option>
+                    </select>
+
+                    <!-- Detail Paket yang dipilih -->
+                    <div v-if="selectedPaket" style="background: #f0f7ff; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+                        <p style="margin:0;"><strong>Isi Paket:</strong> {{ selectedPaket.displayIsi }}</p>
+                        <p style="margin:0;"><strong>Harga:</strong> Rp {{ selectedPaket.harga.toLocaleString('id-ID') }}</p>
+                    </div>
+
+                    <label class="label-sm">Tanggal Kirim</label>
+                    <input type="date" v-model="formDO.tanggalKirim" class="form-control" required>
+
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button type="button" class="btn" @click="modalVisible = false">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan DO</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/dataBahanAjar.js"></script>
+<script src="js/data.js"></script>
+<script src="js/script.js"></script>
+<script src="js/tracking-app.js"></script>
+
+</body>
+</html>

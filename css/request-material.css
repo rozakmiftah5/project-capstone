@@ -1,0 +1,246 @@
+.request-navbar-actions,
+.request-user-block,
+.request-page-heading,
+.request-section-heading,
+.request-item-heading,
+.request-actions,
+.request-action-buttons,
+.request-footer,
+.request-footer-brand {
+    display: flex;
+    align-items: center;
+}
+
+.request-navbar-actions {
+    gap: 20px;
+    text-align: right;
+}
+
+.request-user-block {
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.request-clock,
+.request-user-info {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.78rem;
+}
+
+.request-page-heading,
+.request-section-heading,
+.request-actions {
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.request-page-heading {
+    margin-bottom: 28px;
+    align-items: flex-end;
+}
+
+.request-page-heading h1 {
+    margin: 12px 0 4px;
+    color: var(--text-main);
+    font-size: 1.65rem;
+}
+
+.request-page-heading p,
+.request-section-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.request-back-link {
+    color: var(--primary-blue);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.request-section {
+    padding: 22px 0;
+    border-top: 1px solid #dfe7ee;
+}
+
+.request-section-heading {
+    margin-bottom: 18px;
+}
+
+.request-section-heading h2 {
+    margin: 0 0 5px;
+    color: var(--text-main);
+    font-size: 1.1rem;
+}
+
+.request-meta-grid,
+.request-material-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px 18px;
+}
+
+.request-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+    color: #344054;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.request-field small {
+    display: block;
+    color: #7b8794;
+    font-size: 0.68rem;
+    font-weight: 500;
+}
+
+.request-field .form-control {
+    box-sizing: border-box;
+    min-height: 40px;
+    margin: 0;
+    background: #fff;
+    color: var(--text-main);
+    font: inherit;
+    font-weight: 400;
+}
+
+.request-field textarea.form-control {
+    resize: vertical;
+}
+
+.request-items {
+    display: grid;
+    gap: 16px;
+}
+
+.request-item {
+    padding: 18px;
+    border: 1px solid #dfe7ee;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.request-item-heading {
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.request-item-heading h3 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.request-remove-button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #f2caca;
+    border-radius: 6px;
+    background: #fff;
+    color: #c43d3d;
+    cursor: pointer;
+}
+
+.request-remove-button:hover {
+    background: #fff1f1;
+}
+
+.request-long-text {
+    grid-column: span 2;
+}
+
+.request-sap-number output {
+    display: flex;
+    min-height: 40px;
+    align-items: center;
+    color: #718096;
+    font-size: 0.82rem;
+    font-weight: 400;
+}
+
+.request-actions {
+    padding: 18px 0 8px;
+    border-top: 1px solid #dfe7ee;
+}
+
+.request-actions p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.request-action-buttons {
+    gap: 10px;
+}
+
+.request-secondary-button {
+    border: 1px solid #cbd5df;
+    background: #fff;
+    color: #344054;
+}
+
+.request-footer {
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: auto;
+    padding: 20px 30px;
+    border-top: 1px solid #edf2f7;
+    color: #8a94a3;
+    font-size: 0.75rem;
+}
+
+.request-footer-brand {
+    gap: 10px;
+}
+
+.request-footer-brand img {
+    width: 35px;
+    opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+    .request-meta-grid,
+    .request-material-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .request-content {
+        padding: 20px 16px;
+    }
+
+    .request-page-heading,
+    .request-items-heading,
+    .request-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .request-meta-grid,
+    .request-material-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .request-long-text {
+        grid-column: auto;
+    }
+
+    .request-item {
+        padding: 14px;
+    }
+
+    .request-action-buttons {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .request-footer {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px 16px;
+    }
+}
